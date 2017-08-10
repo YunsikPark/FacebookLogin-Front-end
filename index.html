@@ -6,29 +6,66 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Facebook Login</title>
     <script src="js/cookie.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
 </head>
 <body>
 <script>
-    window.fbAsyncInit = function() {
-        FB.init({
-            appId            : '1601998296497280',
-            autoLogAppEvents : true,
-            xfbml            : true,
-            version          : 'v2.10'
-        });
-        FB.AppEvents.logPageView();
-     };
+window.fbAsyncInit = function() {
+    FB.init({
+        appId            : '1601998296497280',
+        autoLogAppEvents : true,
+        xfbml            : true,
+        version          : 'v2.10'
+    });
+    FB.AppEvents.logPageView();
+ };
 
-    (function(d, s, id){
-        var js, fjs = d.getElementsByTagName(s)[0];
-        if (d.getElementById(id)) {return;}
-        js = d.createElement(s); js.id = id;
-        js.src = "//connect.facebook.net/en_US/sdk.js";
-        fjs.parentNode.insertBefore(js, fjs);
-    }(document, 'script', 'facebook-jssdk'));
+(function(d, s, id){
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) {return;}
+    js = d.createElement(s); js.id = id;
+    js.src = "//connect.facebook.net/en_US/sdk.js";
+    fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));
 </script>
+
+
 <!-- content -->
-<h1>Facebook Login front-end example</h1>
+<div class="container">
+    <h1>Facebook Login front-end example</h1>
+    <button
+        id="btn-facebook-login"
+        class="btn btn-primary btn-block"
+        onclick="fbLogin()"> Facebook Login</button>
+</div>
+
+
+<!-- login 확인 -->
+<script>
+    // cookie에 token이 있는지 검사하여 token이 없을 경우에만 #btn-facebook-login의 display style을 block으로 바꾸어줌
+    var hasToken = cookieHasToken();
+    if (!hasToken) {
+        document.getElementById('btn-facebook-login').style.display = 'block';
+    } else {
+        document.getElementById('btn-facebook-login').style.display = 'none';
+    }
+
+    function fbLogin() {
+        // 페이스북 버튼을 누른 순간, 브라우저에 페이스북 로그인이 되어있는지 검사
+        FB.getLoginStatus(function(response) {
+                console.log(response);
+        });
+    }
+
+    function cookieHasToken() {
+        // 'token'이라는 키에 해당하는 cookie가 있는지 검사결과 확인
+        var token = getCookie('token');
+        if (token == undefined || token == null || token == '') {
+            return false;
+        }
+        return true;
+    }
+</script>
 
 
 </body>
