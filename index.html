@@ -53,8 +53,23 @@ window.fbAsyncInit = function() {
     function fbLogin() {
         // 페이스북 버튼을 누른 순간, 브라우저에 페이스북 로그인이 되어있는지 검사
         FB.getLoginStatus(function(response) {
-                console.log(response);
+            // 브라우저에 페이스북 로그인이 되어 있을 경우
+            if(response.status == 'connected') {
+                backendFacebookLogin(response.authResponse);
+            }
+            // 브라우저에 페이스북 로그인이 되어있지 않은 경우
+            else {
+                FB.login(function(response) {
+                    backendFacebookLogin(response.authResponse);
+                }, {scope: 'public_profile'});
+            }
         });
+    }
+
+    function backendFacebookLogin(authResponse) {
+        // 페이스북 로그인을 통해 받은 authResponse 객체를 이용해
+        // 백엔드의 페이스북 로그인 API를 사용
+        console.log(authResponse);
     }
 
     function cookieHasToken() {
