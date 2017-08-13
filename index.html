@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Facebook Login</title>
+    <script src="node_modules/axios/dist/axios.js"></script>
     <script src="js/cookie.js"></script>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
 </head>
 <body>
 <script>
@@ -37,17 +38,24 @@ window.fbAsyncInit = function() {
         id="btn-facebook-login"
         class="btn btn-primary btn-block"
         onclick="fbLogin()"> Facebook Login</button>
+
+        <p id="info"></p>
+        <pre id="log"></pre>
 </div>
 
 
 <!-- login 확인 -->
 <script>
     // cookie에 token이 있는지 검사하여 token이 없을 경우에만 #btn-facebook-login의 display style을 block으로 바꾸어줌
+    console.log('-- Init --');
     var hasToken = cookieHasToken();
     if (!hasToken) {
         document.getElementById('btn-facebook-login').style.display = 'block';
     } else {
+        console.log('token not exist');
         document.getElementById('btn-facebook-login').style.display = 'none';
+        // backendTokenUserInfo(getCookie('token'));
+        backendGetUserInfo();
     }
 
     function fbLogin() {
@@ -55,11 +63,13 @@ window.fbAsyncInit = function() {
         FB.getLoginStatus(function(response) {
             // 브라우저에 페이스북 로그인이 되어 있을 경우
             if(response.status == 'connected') {
+                console.log('fbLobin > connected');
                 backendFacebookLogin(response.authResponse);
             }
             // 브라우저에 페이스북 로그인이 되어있지 않은 경우
             else {
                 FB.login(function(response) {
+                    console.log('fbLogin > Login success');
                     backendFacebookLogin(response.authResponse);
                 }, {scope: 'public_profile'});
             }
@@ -70,8 +80,56 @@ window.fbAsyncInit = function() {
         // 페이스북 로그인을 통해 받은 authResponse 객체를 이용해
         // 백엔드의 페이스북 로그인 API를 사용
         console.log(authResponse);
+        var url = 'http://localhost:8000/facebook-login/';
+        axios.post(url, {
+            token: authResponse.accessToken
+        })
+        .then(function(response) {
+            console.log('backendFacebookLogin success');
+            displayUserInfo(response.data.user);
+
+            //token을 쿠키에 저장
+            var token = response.data.token;
+            setCookie('token', token, 7);
+        })
+        .catch(function(error) {
+            console.log(error);
+        });
     }
 
+    function backendTokenUserInfo(token) {
+        var url = 'http://localhost:8000/token-user-info/';
+        axios.post(url, {
+            token: token
+        })
+        .then(function(response) {
+            console.log('backendTokenUserInfo success');
+            console.log(response);
+            displayUserInfo(response.data);
+        })
+    }
+
+    function backendGetUserInfo() {
+        var url = 'http://localhost:8000/user/info/';
+        axios.post(url, {}, {
+            headers: {
+                Authorization: 'Token ' + getCookie('token')
+            }
+        })
+        .then(function(response) {
+            console.log('backendGetUserInfo success');
+            console.log(response);
+            displayUserInfo(response.data);
+        })
+    }
+
+    function displayUserInfo(userInfo) {
+        // 관련메시지 띄우기
+        var name = userInfo.last_name + userInfo.first_name;
+        document.getElementById('log').textContent = JSON.stringify(userInfo, null, 2);
+        document.getElementById('info').textContent = name + '님으로 로그인 중 입니다';
+    }
+    
     function cookieHasToken() {
         // 'token'이라는 키에 해당하는 cookie가 있는지 검사결과 확인
         var token = getCookie('token');
